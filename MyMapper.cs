@@ -1,4 +1,10 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////   MyMapper.cs    //////////////////////////////////////////////
+///////////////////////////////////////// Author: Shantanu //////////////////////////////////////////////
+///////////////////////////////////////// Date: 7-Oct-2015 //////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,6 +24,11 @@ namespace MyMapper
         TDestination Convert(TSource source); 
     }
 
+    /// <summary>
+    /// MyMapper - Generic interface
+    /// </summary>
+    /// <typeparam name="TSource">The source</typeparam>
+    /// <typeparam name="TDestination">The destination</typeparam>
     public interface IMyMapper<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
@@ -79,6 +90,11 @@ namespace MyMapper
             where TConverter : ITypeConverter<TSource, TDestination>, new();
     }
 
+    /// <summary>
+    /// MyMapper - Generic class
+    /// </summary>
+    /// <typeparam name="TSource">The source</typeparam>
+    /// <typeparam name="TDestination">The destination</typeparam>
     public class MyMapper<TSource, TDestination> : IMyMapper<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
@@ -115,6 +131,9 @@ namespace MyMapper
                                                     )
             where TDestinationResult : class, new()
         {
+            if (this.Destination == null)
+                this.Destination = new TDestination();
+
             destination(this.Destination, map(source.Compile()(this.Source)));
 
             return this;
@@ -129,6 +148,9 @@ namespace MyMapper
             where TDestinationResult : class, new()
         {
             var sourceList = source.Compile()(this.Source);
+
+            if (this.Destination == null)
+                this.Destination = new TDestination();
 
             var destinationList = sourceList.Select(map);            
 
@@ -147,6 +169,9 @@ namespace MyMapper
         {
             var sourceList = source.Compile()(this.Source);
 
+            if (this.Destination == null)
+                this.Destination = new TDestination();
+
             var destinationList = sourceList.Select(map);
 
             destination(this.Destination, destinationList.ToList());
@@ -163,6 +188,9 @@ namespace MyMapper
             where TDestinationResult : class, new()
         {
             var sourceList = source.Compile()(this.Source);
+
+            if (this.Destination == null)
+                this.Destination = new TDestination();
 
             var destinationList = sourceList.Select(map);
 
