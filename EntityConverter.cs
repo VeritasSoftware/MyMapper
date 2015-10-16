@@ -1,4 +1,4 @@
-﻿/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////// EntityConverter.cs ////////////////////////////////////////////
 ///////////////////////////////////////// Author: Shantanu   ////////////////////////////////////////////
 ///////////////////////////////////////// Date: 7-Oct-2015   ////////////////////////////////////////////
@@ -85,6 +85,8 @@ namespace MyMapper.Converters
         static Dictionary<Type, List<PropertyInfo>> dictionarySourcePropertyInfos;
         static Dictionary<Type, List<PropertyInfo>> dictionaryDestinationPropertyInfos;
 
+        public TDestination Destination { get; set; }
+
         protected object Convert(object source, Type destinationType)
         {
             List<PropertyInfo> sourcePropertyInfos;
@@ -159,7 +161,10 @@ namespace MyMapper.Converters
 
         public TDestination Convert(TSource source)
         {
-            TDestination destinationObj = new TDestination();
+            TDestination destinationObj = this.Destination;
+
+            if (destinationObj == null)
+                destinationObj = new TDestination();
 
             List<PropertyInfo> sourcePropertyInfos;
             List<PropertyInfo> destinationPropertyInfos;
