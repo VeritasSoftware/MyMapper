@@ -1,4 +1,4 @@
-﻿/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////   MyMapper.cs    //////////////////////////////////////////////
 ///////////////////////////////////////// Author: Shantanu //////////////////////////////////////////////
 ///////////////////////////////////////// Date: 7-Oct-2015 //////////////////////////////////////////////
@@ -12,6 +12,8 @@ using System.Text;
 
 namespace MyMapper
 {
+    using MyMapper.Converters;
+
     public interface IMap<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
@@ -82,7 +84,7 @@ namespace MyMapper
                                                     Action<IMyMapper<TSource, TDestination>> then
                                              );
 
-        TDestination Exec();
+        TDestination Exec(bool automap = true);
 
         TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map);
 
@@ -197,7 +199,7 @@ namespace MyMapper
             destination(this.Destination, destinationList.ToList());
 
             return this;
-        }            
+        }
 
         public IMyMapper<TSource, TDestination> WithWhen<TProperty>(
                                                                         Func<TSource, bool> when,
@@ -233,8 +235,11 @@ namespace MyMapper
             return this;
         }        
 
-        public TDestination Exec()
+        public TDestination Exec(bool automap = true)
         {
+            if (automap)
+                this.Destination = new EntityConverter<TSource, TDestination>() { Destination = this.Destination }.Convert(this.Source);
+
             return this.Destination;
         }
 
