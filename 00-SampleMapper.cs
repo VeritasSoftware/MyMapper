@@ -44,7 +44,6 @@ namespace MyMapper.Test.Mappers
         {            
             return Mapper<Response1, Response3>.Map(response1)
                                                     .With(r1 => r1.ConsumerID, (r3, consumerId) => r3.IDNumber = consumerId)
-                                                    .With(r1 => r1.Name, (r3, name) => r3.Name = name)
                                                     .With(r1 => r1.AvgNoOfPurchasesPerMonth * r1.PeriodInMonths, (r3, total) => r3.TotalPurchases = total)
                                                     //Mapping List
                                                     .With(r1 => r1.BankingInfos, (r3, bankingInfos) => r3.BankingInformation = bankingInfos, Map)
