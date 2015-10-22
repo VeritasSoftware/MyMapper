@@ -82,8 +82,7 @@ namespace MyMapper.Converters
         where TSource : class
         where TDestination : class, new()
     {
-        static Dictionary<Type, List<PropertyInfo>> dictionarySourcePropertyInfos;
-        static Dictionary<Type, List<PropertyInfo>> dictionaryDestinationPropertyInfos;
+        static Dictionary<Type, List<PropertyInfo>> dictionaryEntityPropertyInfos;
 
         public TDestination Destination { get; set; }
 
@@ -94,32 +93,29 @@ namespace MyMapper.Converters
 
             object destinationObj = Activator.CreateInstance(destinationType);
 
-            if (dictionarySourcePropertyInfos == null)
-                dictionarySourcePropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
+            if (dictionaryEntityPropertyInfos == null)
+                dictionaryEntityPropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
 
-            if (!dictionarySourcePropertyInfos.ContainsKey(source.GetType()))
+            if (!dictionaryEntityPropertyInfos.ContainsKey(source.GetType()))
             {
                 sourcePropertyInfos = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
 
-                dictionarySourcePropertyInfos.Add(source.GetType(), sourcePropertyInfos);
+                dictionaryEntityPropertyInfos.Add(source.GetType(), sourcePropertyInfos);
             }
             else
             {
-                dictionarySourcePropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
-            }
+                dictionaryEntityPropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
+            }            
 
-            if (dictionaryDestinationPropertyInfos == null)
-                dictionaryDestinationPropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
-
-            if (!dictionaryDestinationPropertyInfos.ContainsKey(destinationObj.GetType()))
+            if (!dictionaryEntityPropertyInfos.ContainsKey(destinationObj.GetType()))
             {
                 destinationPropertyInfos = destinationObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
 
-                dictionaryDestinationPropertyInfos.Add(destinationObj.GetType(), destinationPropertyInfos);
+                dictionaryEntityPropertyInfos.Add(destinationObj.GetType(), destinationPropertyInfos);
             }
             else
             {
-                dictionaryDestinationPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
+                dictionaryEntityPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
             }
 
             foreach (PropertyInfo destinationPropertyInfo in destinationPropertyInfos)
@@ -169,32 +165,29 @@ namespace MyMapper.Converters
             List<PropertyInfo> sourcePropertyInfos;
             List<PropertyInfo> destinationPropertyInfos;
 
-            if (dictionarySourcePropertyInfos == null)
-                dictionarySourcePropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
+            if (dictionaryEntityPropertyInfos == null)
+                dictionaryEntityPropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
 
-            if (!dictionarySourcePropertyInfos.ContainsKey(source.GetType()))
+            if (!dictionaryEntityPropertyInfos.ContainsKey(source.GetType()))
             {
                 sourcePropertyInfos = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
 
-                dictionarySourcePropertyInfos.Add(source.GetType(), sourcePropertyInfos);
+                dictionaryEntityPropertyInfos.Add(source.GetType(), sourcePropertyInfos);
             }
             else
             {
-                dictionarySourcePropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
-            }
+                dictionaryEntityPropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
+            }            
 
-            if (dictionaryDestinationPropertyInfos == null)
-                dictionaryDestinationPropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
-
-            if (!dictionaryDestinationPropertyInfos.ContainsKey(destinationObj.GetType()))
+            if (!dictionaryEntityPropertyInfos.ContainsKey(destinationObj.GetType()))
             {
                 destinationPropertyInfos = destinationObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
 
-                dictionaryDestinationPropertyInfos.Add(destinationObj.GetType(), destinationPropertyInfos);
+                dictionaryEntityPropertyInfos.Add(destinationObj.GetType(), destinationPropertyInfos);
             }
             else
             {
-                dictionaryDestinationPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
+                dictionaryEntityPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
             }
 
             foreach (PropertyInfo destinationPropertyInfo in destinationPropertyInfos)
