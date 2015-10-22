@@ -35,7 +35,7 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
-        IMyMapper<TSource, TDestination> Map(TSource source);
+        IMyMapper<TSource, TDestination> Map(TSource source, bool automap = true);
         
         IMyMapper<TSource, TDestination> With<TProperty>(
                                                             Func<TSource, TProperty> source,
@@ -84,7 +84,7 @@ namespace MyMapper
                                                     Action<IMyMapper<TSource, TDestination>> then
                                              );
 
-        TDestination Exec(bool automap = true);
+        TDestination Exec();
 
         TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map);
 
@@ -104,9 +104,12 @@ namespace MyMapper
         TSource Source { get; set; }
         TDestination Destination { get; set; }
 
-        public IMyMapper<TSource, TDestination> Map(TSource source)
+        public IMyMapper<TSource, TDestination> Map(TSource source, bool automap = true)
         {
             this.Source = source;
+
+            if (automap)
+                this.Destination = new EntityConverter<TSource, TDestination>() { Destination = this.Destination }.Convert(this.Source);
 
             return this;
         }        
@@ -235,11 +238,8 @@ namespace MyMapper
             return this;
         }        
 
-        public TDestination Exec(bool automap = true)
-        {
-            if (automap)
-                this.Destination = new EntityConverter<TSource, TDestination>() { Destination = this.Destination }.Convert(this.Source);
-
+        public TDestination Exec()
+        {            
             return this.Destination;
         }
 
