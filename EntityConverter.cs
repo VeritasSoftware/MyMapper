@@ -84,8 +84,6 @@ namespace MyMapper.Converters
     {
         static Dictionary<Type, List<PropertyInfo>> dictionaryEntityPropertyInfos;
 
-        public TDestination Destination { get; set; }
-
         protected object Convert(object source, Type destinationType)
         {
             List<PropertyInfo> sourcePropertyInfos;
@@ -156,11 +154,8 @@ namespace MyMapper.Converters
         }
 
         public TDestination Convert(TSource source)
-        {
-            TDestination destinationObj = this.Destination;
-
-            if (destinationObj == null)
-                destinationObj = new TDestination();
+        {           
+            TDestination destinationObj = new TDestination();
 
             List<PropertyInfo> sourcePropertyInfos;
             List<PropertyInfo> destinationPropertyInfos;
