@@ -12,6 +12,8 @@ using System.Text;
 using System.Data;
 using System.Reflection;
 
+using System.Collections;
+
 namespace MyMapper.Converters
 {
     /// <summary>
@@ -130,6 +132,21 @@ namespace MyMapper.Converters
                     {
                         sourceVal = this.Convert(sourceVal, destinationPropertyInfo.PropertyType);
                     }
+                    else if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
+                    && sourcePropertyInfo.PropertyType.IsGenericType)
+                    {
+                        var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+
+                        var sList = sourceVal as IList;
+                        var dList = list as IList;
+
+                        foreach (var item in sList)
+                        {
+                            dList.Add(this.Convert(item, dList.GetType().GetGenericArguments()[0]));
+                        }
+
+                        sourceVal = dList;
+                    }
                 }
                 catch (Exception)
                 {
@@ -198,7 +215,22 @@ namespace MyMapper.Converters
                     if (sourcePropertyInfo.PropertyType.IsClass && !sourcePropertyInfo.PropertyType.FullName.StartsWith("System."))
                     {
                         sourceVal = Convert(sourceVal, destinationPropertyInfo.PropertyType);
-                    }                    
+                    }
+                    else if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
+                    && sourcePropertyInfo.PropertyType.IsGenericType)
+                    {
+                        var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+
+                        var sList = sourceVal as IList;
+                        var dList = list as IList;
+
+                        foreach (var item in sList)
+                        {
+                            dList.Add(this.Convert(item, dList.GetType().GetGenericArguments()[0]));
+                        }
+
+                        sourceVal = dList;
+                    }
                 }
                 catch (Exception)
                 {
