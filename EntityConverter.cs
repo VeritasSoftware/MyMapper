@@ -157,9 +157,7 @@ namespace MyMapper.Converters
 
                         CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
 
-                        destinationPropertyInfo.SetValue(destinationObj, dList, null);
-
-                        continue;
+                        sourceVal = dList;                        
                     }
                 }
                 catch (Exception)
@@ -171,7 +169,9 @@ namespace MyMapper.Converters
                 {
                     try
                     {
-                        object value = System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType);
+                        object value = sourceVal is IConvertible ?
+                                    System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType)
+                                    : sourceVal;
 
                         destinationPropertyInfo.SetValue(destinationObj, value, null);
                     }
@@ -255,12 +255,10 @@ namespace MyMapper.Converters
 
                         CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
 
-                        destinationPropertyInfo.SetValue(destinationObj, dList, null);
-
-                        continue;
+                        sourceVal = dList;                        
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     continue;
                 }
@@ -269,7 +267,9 @@ namespace MyMapper.Converters
                 {
                     try
                     {
-                        object value = System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType);
+                        object value = sourceVal is IConvertible ?
+                                    System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType)
+                                    : sourceVal;                        
 
                         destinationPropertyInfo.SetValue(destinationObj, value, null);
                     }
