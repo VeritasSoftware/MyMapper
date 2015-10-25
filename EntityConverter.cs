@@ -140,12 +140,26 @@ namespace MyMapper.Converters
                         var sList = sourceVal as IList;
                         var dList = list as IList;
 
-                        foreach (var item in sList)
-                        {
-                            dList.Add(this.Convert(item, dList.GetType().GetGenericArguments()[0]));
-                        }
+                        CreateList(sList, dList, dList.GetType().GetGenericArguments()[0]);                        
 
                         sourceVal = dList;
+                    }
+                    else if (typeof(IEnumerable).IsAssignableFrom(sourcePropertyInfo.PropertyType)
+                    && sourcePropertyInfo.PropertyType.IsGenericType)
+                    {
+                        var listType = typeof(List<>);
+                        var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
+
+                        var list = Activator.CreateInstance(constructedListType);
+
+                        var sList = sourceVal as IList;
+                        var dList = list as IList;                        
+
+                        CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
+
+                        destinationPropertyInfo.SetValue(destinationObj, dList, null);
+
+                        continue;
                     }
                 }
                 catch (Exception)
@@ -168,7 +182,7 @@ namespace MyMapper.Converters
             }
 
             return destinationObj;
-        }
+        }        
 
         public TDestination Convert(TSource source)
         {           
@@ -224,15 +238,29 @@ namespace MyMapper.Converters
                         var sList = sourceVal as IList;
                         var dList = list as IList;
 
-                        foreach (var item in sList)
-                        {
-                            dList.Add(this.Convert(item, dList.GetType().GetGenericArguments()[0]));
-                        }
+                        CreateList(sList, dList, dList.GetType().GetGenericArguments()[0]);                        
 
                         sourceVal = dList;
                     }
+                    else if (typeof(IEnumerable).IsAssignableFrom(sourcePropertyInfo.PropertyType)
+                    && sourcePropertyInfo.PropertyType.IsGenericType)
+                    {
+                        var listType = typeof(List<>);
+                        var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
+
+                        var list = Activator.CreateInstance(constructedListType);
+
+                        var sList = sourceVal as IList;
+                        var dList = list as IList;                        
+
+                        CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
+
+                        destinationPropertyInfo.SetValue(destinationObj, dList, null);
+
+                        continue;
+                    }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     continue;
                 }
@@ -252,6 +280,14 @@ namespace MyMapper.Converters
             }
 
             return destinationObj;
+        }
+
+        private void CreateList(IList sList, IList dList, Type destinationType)
+        {
+            foreach (var item in sList)
+            {
+                dList.Add(this.Convert(item, destinationType));
+            }
         }
     }
 }
