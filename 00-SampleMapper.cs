@@ -36,7 +36,6 @@ namespace MyMapper.Test.Mappers
         {
             return Mapper<BankingInfo1, BankingInfo3>.Map(bankingInfo1)
                                                         .With(bi1 => bi1.AccountNo, (bi3, accNo) => bi3.AccountNumber = accNo)
-                                                        .With(bi1 => bi1.AccountName, (bi3, accName) => bi3.AccountName = accName)
                                                      .Exec();
         }
 
