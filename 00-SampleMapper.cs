@@ -5,8 +5,9 @@ using System.Text;
 
 namespace MyMapper.Test.Mappers
 {
-    using MyMapper.Test.Entities;
+    using MyMapper;
     using MyMapper.Converters;
+    using MyMapper.Test.Entities;
 
     public interface IResponseMapper
     {
