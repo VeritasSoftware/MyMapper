@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MyMapper.Test.Mappers
+namespace MyMapper.UnitTests.Mappers
 {
-    using MyMapper;
+    using MyMapper;    
     using MyMapper.Converters;
-    using MyMapper.Test.Entities;
+    using MyMapper.UnitTests.Entities;
 
     public interface IResponseMapper
     {
@@ -15,13 +15,14 @@ namespace MyMapper.Test.Mappers
     }
 
     public class ResponseMapper : IResponseMapper
-    {                
+    {
         public ResponseMapper()
-        {            
+        {
         }
 
         public Fund3 Map(Fund1 fund1)
         {
+            //Both Classes (Fund1 & Fund3) have properties by the same name
             return Mapper<Fund1, Fund3>.Exec<EntityConverter<Fund1, Fund3>>(fund1);
         }
 
@@ -41,7 +42,7 @@ namespace MyMapper.Test.Mappers
         }
 
         public Response3 Map(Response1 response1)
-        {            
+        {
             return Mapper<Response1, Response3>.Map(response1)
                                                     .With(r1 => r1.ConsumerID, (r3, consumerId) => r3.IDNumber = consumerId)
                                                     .With(r1 => r1.AvgNoOfPurchasesPerMonth * r1.PeriodInMonths, (r3, total) => r3.TotalPurchases = total)
@@ -49,9 +50,9 @@ namespace MyMapper.Test.Mappers
                                                     .With(r1 => r1.BankingInfos, (r3, bankingInfos) => r3.BankingInformation = bankingInfos, Map)
                                                     //Using another map - When Details1 is not null then map Details1 to Details3 using another map 
                                                     .When(r1 => r1.Details != null, mapper => mapper.With(r1 => r1.Details, (r3, details3) => r3.Details = details3, Map))
-													//Using another map - When Fund1 is not null then map Fund1 to Fund3 using another map 
-                                                    .When(r1 => r1.Fund != null, mapper => mapper.With(r1 => r1.Fund, (r3, fund3) => r3.Fund = fund3, Map))                                           
+                                                    //Using another map - When Fund1 is not null then map Fund1 to Fund3 using another map 
+                                                    .When(r1 => r1.Fund != null, mapper => mapper.With(r1 => r1.Fund, (r3, fund3) => r3.Fund = fund3, Map))
                                                 .Exec();
-        }            
+        }
     }
 }
