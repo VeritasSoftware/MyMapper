@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MyMapper.UnitTests.Mappers
+namespace MyMapper.Test.Mappers
 {
     using MyMapper;    
     using MyMapper.Converters;
-    using MyMapper.UnitTests.Entities;
+    using MyMapper.Test.Entities;
 
     public interface IResponseMapper
     {
