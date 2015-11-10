@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MyMapper.Test.Entities
+namespace MyMapper.UnitTests.Entities
 {
     #region Response1
     public class Details1
@@ -58,8 +58,7 @@ namespace MyMapper.Test.Entities
 
         public Details1 Details { get; set; }
 
-        //Automapped
-        public Fund1 Fund { get; set; }
+        public Fund1 MutualFund { get; set; }
 
         //List
         public List<BankingInfo1> BankingInfos { get; set; }        
