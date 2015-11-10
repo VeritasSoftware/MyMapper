@@ -51,6 +51,8 @@ namespace MyMapper.Test.Mappers
                                                     .With(r1 => r1.BankingInfos, (r3, bankingInfos) => r3.BankingInformation = bankingInfos, Map)
                                                     //Using another map - When Details1 is not null then map Details1 to Details3 using another map 
                                                     .When(r1 => r1.Details != null, mapper => mapper.With(r1 => r1.Details, (r3, details3) => r3.Details = details3, Map))
+                                                    //Using another map - When Fund1 is not null then map Fund1 to Fund3 using another map 
+                                                    .When(r1 => r1.MutualFund != null, mapper => mapper.With(r1 => r1.MutualFund, (r3, fund3) => r3.Fund = fund3, Map))
                                                 .Exec();
         }
     }
