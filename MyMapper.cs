@@ -18,38 +18,36 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
-        TDestination Map(TSource source, IMyMapper<TSource, TDestination> mapper);        
+        TDestination Map(TSource source, IMyMapper<TSource, TDestination> mapper);
     }
 
     public interface ITypeConverter<TSource, TDestination>
     {
-        TDestination Convert(TSource source); 
+        TDestination Convert(TSource source);
     }
 
     /// <summary>
-    /// MyMapper - Generic interface
+    /// IMyMapperRules - Generic interface
     /// </summary>
     /// <typeparam name="TSource">The source</typeparam>
     /// <typeparam name="TDestination">The destination</typeparam>
-    public interface IMyMapper<TSource, TDestination>
+    public interface IMyMapperRules<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
     {
-        IMyMapper<TSource, TDestination> Map(TSource source, bool automap = true);
-        
-        IMyMapper<TSource, TDestination> With<TProperty>(
+        IMyMapperRules<TSource, TDestination> With<TProperty>(
                                                             Func<TSource, TProperty> source,
                                                             Action<TDestination, TProperty> destination
                                                         );
 
-        IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, TSourceResult>> mapFrom,
                                                         Action<TDestination, TDestinationResult> mapTo,
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TDestinationResult : class, new();
 
-        IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, ICollection<TSourceResult>>> source,
                                                         Action<TDestination, ICollection<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -57,7 +55,7 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new();
 
-        IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, IEnumerable<TSourceResult>>> source,
                                                         Action<TDestination, IEnumerable<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -65,7 +63,7 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new();
 
-        IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, List<TSourceResult>>> source,
                                                         Action<TDestination, List<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -73,18 +71,30 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new();
 
-        IMyMapper<TSource, TDestination> WithWhen<TProperty>(
+        IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
                                                                 Func<TSource, bool> when,
                                                                 Func<TSource, TProperty> source,
                                                                 Action<TDestination, TProperty> destination
                                                             );
 
-        IMyMapper<TSource, TDestination> When(
+        IMyMapperRules<TSource, TDestination> When(
                                                     Func<TSource, bool> when,
-                                                    Action<IMyMapper<TSource, TDestination>> then
+                                                    Action<IMyMapperRules<TSource, TDestination>> then
                                              );
 
-        TDestination Exec();
+        TDestination Exec();        
+    }
+
+    /// <summary>
+    /// IMyMapper - Generic interface
+    /// </summary>
+    /// <typeparam name="TSource">The source</typeparam>
+    /// <typeparam name="TDestination">The destination</typeparam>
+    public interface IMyMapper<TSource, TDestination> : IMyMapperRules<TSource, TDestination>
+        where TSource : class
+        where TDestination : class, new()
+    {
+        IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true);        
 
         TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map);
 
@@ -100,47 +110,47 @@ namespace MyMapper
     public class MyMapper<TSource, TDestination> : IMyMapper<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
-    {        
+    {
         TSource Source { get; set; }
         TDestination Destination { get; set; }
 
-        public IMyMapper<TSource, TDestination> Map(TSource source, bool automap = true)
+        public IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true)
         {
             this.Source = source;
 
-            this.Destination = new TDestination();                
+            this.Destination = new TDestination();
 
             if (automap)
                 this.Destination = new EntityConverter<TSource, TDestination>().Convert(this.Source);
 
             return this;
-        }        
+        }
 
-        public IMyMapper<TSource, TDestination> With<TProperty>(
+        public IMyMapperRules<TSource, TDestination> With<TProperty>(
                                                                         Func<TSource, TProperty> source,
                                                                         Action<TDestination, TProperty> destination
                                                                 )
         {
-            var sourceProp = source(this.Source);            
+            var sourceProp = source(this.Source);
 
             destination(this.Destination, sourceProp);
 
             return this;
         }
 
-        public IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, TSourceResult>> source,
                                                         Action<TDestination, TDestinationResult> destination,
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TDestinationResult : class, new()
-        {            
+        {
             destination(this.Destination, map(source.Compile()(this.Source)));
 
             return this;
         }
 
-        public IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, ICollection<TSourceResult>>> source,
                                                         Action<TDestination, ICollection<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -148,16 +158,16 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new()
         {
-            var sourceList = source.Compile()(this.Source);            
+            var sourceList = source.Compile()(this.Source);
 
-            var destinationList = sourceList.Select(map);            
+            var destinationList = sourceList.Select(map);
 
             destination(this.Destination, destinationList as ICollection<TDestinationResult>);
 
             return this;
-        }        
+        }
 
-        public IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, IEnumerable<TSourceResult>>> source,
                                                         Action<TDestination, IEnumerable<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -165,7 +175,7 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new()
         {
-            var sourceList = source.Compile()(this.Source);            
+            var sourceList = source.Compile()(this.Source);
 
             var destinationList = sourceList.Select(map);
 
@@ -174,7 +184,7 @@ namespace MyMapper
             return this;
         }
 
-        public IMyMapper<TSource, TDestination> With<TSourceResult, TDestinationResult>(
+        public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, List<TSourceResult>>> source,
                                                         Action<TDestination, List<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
@@ -182,7 +192,7 @@ namespace MyMapper
             where TSourceResult : class
             where TDestinationResult : class, new()
         {
-            var sourceList = source.Compile()(this.Source);            
+            var sourceList = source.Compile()(this.Source);
 
             var destinationList = sourceList.Select(map);
 
@@ -191,7 +201,7 @@ namespace MyMapper
             return this;
         }
 
-        public IMyMapper<TSource, TDestination> WithWhen<TProperty>(
+        public IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
                                                                         Func<TSource, bool> when,
                                                                         Func<TSource, TProperty> source,
                                                                         Action<TDestination, TProperty> destination
@@ -202,35 +212,35 @@ namespace MyMapper
                 return this;
             }
 
-            var sourceProp = source(this.Source);            
+            var sourceProp = source(this.Source);
 
             destination(this.Destination, sourceProp);
 
             return this;
         }
 
-        public IMyMapper<TSource, TDestination> When(
+        public IMyMapperRules<TSource, TDestination> When(
                                                         Func<TSource, bool> when,
-                                                        Action<IMyMapper<TSource, TDestination>> then
+                                                        Action<IMyMapperRules<TSource, TDestination>> then
                                                     )
         {
             if (when(this.Source))
             {
-                then(this);
+                then(this); 
             }
 
             return this;
-        }        
+        }
 
         public TDestination Exec()
-        {            
+        {
             return this.Destination;
         }
 
         public TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map)
         {
             return map(source, this);
-        }        
+        }
 
         public TDestination Exec<TConverter>(TSource source)
             where TConverter : ITypeConverter<TSource, TDestination>, new()
