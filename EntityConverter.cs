@@ -127,12 +127,8 @@ namespace MyMapper.Converters
                     var sourcePropertyInfo = sourcePropertyInfos.Single(pi => pi.Name == destinationPropertyInfo.Name); //&& pi.PropertyType == destinationPropertyInfo.PropertyType);
 
                     sourceVal = sourcePropertyInfo.GetValue(source, BindingFlags.GetProperty, null, null, null);
-
-                    if (sourcePropertyInfo.PropertyType.IsClass && !sourcePropertyInfo.PropertyType.FullName.StartsWith("System."))
-                    {
-                        sourceVal = this.Convert(sourceVal, destinationPropertyInfo.PropertyType);
-                    }
-                    else if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
+                   
+                    if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
                     && sourcePropertyInfo.PropertyType.IsGenericType)
                     {
                         var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
@@ -144,6 +140,32 @@ namespace MyMapper.Converters
 
                         sourceVal = dList;
                     }
+                    else if (sourcePropertyInfo.PropertyType.IsArray)
+                    {                        
+                        var sList = sourceVal as IList;
+                        var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType, sList.Count);
+                        var dList = list as IList;
+
+                        CreateArray(sList, dList, destinationPropertyInfo.PropertyType);
+
+                        sourceVal = dList;
+                    }
+                    else if (sourcePropertyInfo.PropertyType.IsGenericType &&
+                        sourceVal is IDictionary)
+                    {
+                        var dictionary = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+
+                        var sDictionary = sourceVal as IDictionary;
+                        var dDictionary = dictionary as IDictionary;
+
+
+                        var keyType = destinationPropertyInfo.PropertyType.GetGenericArguments()[0];
+                        var valueType = destinationPropertyInfo.PropertyType.GetGenericArguments()[1];
+
+                        CreateDictionary(sDictionary, dDictionary, keyType, valueType);
+
+                        sourceVal = dDictionary;
+                    }
                     else if (typeof(IEnumerable).IsAssignableFrom(sourcePropertyInfo.PropertyType)
                     && sourcePropertyInfo.PropertyType.IsGenericType)
                     {
@@ -153,11 +175,15 @@ namespace MyMapper.Converters
                         var list = Activator.CreateInstance(constructedListType);
 
                         var sList = sourceVal as IList;
-                        var dList = list as IList;                        
+                        var dList = list as IList;
 
                         CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
 
-                        sourceVal = dList;                        
+                        sourceVal = dList;
+                    }
+                    else if (sourcePropertyInfo.PropertyType.IsClass && !sourcePropertyInfo.PropertyType.FullName.StartsWith("System."))
+                    {
+                        sourceVal = this.Convert(sourceVal, destinationPropertyInfo.PropertyType);
                     }
                 }
                 catch (Exception)
@@ -185,109 +211,51 @@ namespace MyMapper.Converters
         }        
 
         public TDestination Convert(TSource source)
-        {           
-            TDestination destinationObj = new TDestination();
-
-            List<PropertyInfo> sourcePropertyInfos;
-            List<PropertyInfo> destinationPropertyInfos;
-
-            if (dictionaryEntityPropertyInfos == null)
-                dictionaryEntityPropertyInfos = new Dictionary<Type, List<PropertyInfo>>();
-
-            if (!dictionaryEntityPropertyInfos.ContainsKey(source.GetType()))
-            {
-                sourcePropertyInfos = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-
-                dictionaryEntityPropertyInfos.Add(source.GetType(), sourcePropertyInfos);
-            }
-            else
-            {
-                dictionaryEntityPropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
-            }            
-
-            if (!dictionaryEntityPropertyInfos.ContainsKey(destinationObj.GetType()))
-            {
-                destinationPropertyInfos = destinationObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-
-                dictionaryEntityPropertyInfos.Add(destinationObj.GetType(), destinationPropertyInfos);
-            }
-            else
-            {
-                dictionaryEntityPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
-            }
-
-            foreach (PropertyInfo destinationPropertyInfo in destinationPropertyInfos)
-            {
-                object sourceVal = null;
-
-                try
-                {
-                    var sourcePropertyInfo = sourcePropertyInfos.Single(pi => pi.Name == destinationPropertyInfo.Name); //&& pi.PropertyType == destinationPropertyInfo.PropertyType);
-
-                    sourceVal = sourcePropertyInfo.GetValue(source, BindingFlags.GetProperty, null, null, null);
-
-                    if (sourcePropertyInfo.PropertyType.IsClass && !sourcePropertyInfo.PropertyType.FullName.StartsWith("System."))
-                    {
-                        sourceVal = Convert(sourceVal, destinationPropertyInfo.PropertyType);
-                    }
-                    else if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
-                    && sourcePropertyInfo.PropertyType.IsGenericType)
-                    {
-                        var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
-
-                        var sList = sourceVal as IList;
-                        var dList = list as IList;
-
-                        CreateList(sList, dList, dList.GetType().GetGenericArguments()[0]);                        
-
-                        sourceVal = dList;
-                    }
-                    else if (typeof(IEnumerable).IsAssignableFrom(sourcePropertyInfo.PropertyType)
-                    && sourcePropertyInfo.PropertyType.IsGenericType)
-                    {
-                        var listType = typeof(List<>);
-                        var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
-
-                        var list = Activator.CreateInstance(constructedListType);
-
-                        var sList = sourceVal as IList;
-                        var dList = list as IList;                        
-
-                        CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
-
-                        sourceVal = dList;                        
-                    }
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-
-                if (destinationPropertyInfo != null && destinationPropertyInfo.CanWrite)
-                {
-                    try
-                    {
-                        object value = sourceVal is IConvertible ?
-                                    System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType)
-                                    : sourceVal;                        
-
-                        destinationPropertyInfo.SetValue(destinationObj, value, null);
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-
-            return destinationObj;
+        {
+            return this.Convert(source, typeof(TDestination)) as TDestination;            
         }
 
         private void CreateList(IList sList, IList dList, Type destinationType)
         {
+            bool isClass = destinationType.IsClass && !destinationType.FullName.StartsWith("System.");            
+
             foreach (var item in sList)
             {
-                dList.Add(this.Convert(item, destinationType));
+                if (isClass)
+                    dList.Add(this.Convert(item, destinationType));
+                else
+                    dList.Add(item);                
             }
         }
+
+        private void CreateArray(IList sList, IList dList, Type destinationType)
+        {
+            bool isClass = destinationType.IsClass && !destinationType.FullName.StartsWith("System.");
+
+            int i = 0;
+            foreach (var item in sList)
+            {
+                if (isClass)
+                    dList[i] = this.Convert(item, destinationType);
+                else
+                    dList[i] = item;
+
+                i++;
+            }
+        }
+
+        private void CreateDictionary(IDictionary sList, IDictionary dList, Type destinationTypeKey, Type destinationTypeValue)
+        {            
+            foreach (var item in sList)
+            {
+                var entry = (DictionaryEntry)item;
+
+                var key = System.Convert.ChangeType(entry.Key, destinationTypeKey);
+                var value = System.Convert.ChangeType(entry.Value, destinationTypeValue);
+
+                dList.Add(key, value);
+            }
+        }
+
     }
 }
