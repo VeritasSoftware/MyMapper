@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MyMapper.UnitTests.Entities
+namespace MyMapper.Test.Entities
 {
     #region Response1
     public class Details1
@@ -37,6 +37,10 @@ namespace MyMapper.UnitTests.Entities
     {
         public string Name { get; set; }
         public int FundId { get; set; }
+
+        public string[] OtherNames { get; set; }
+
+        public Dictionary<int, int> FundKeys { get; set; }
 
         public Address1 Address { get; set; }
     }
@@ -99,6 +103,10 @@ namespace MyMapper.UnitTests.Entities
         public string Name { get; set; }
         public int FundId { get; set; }
 
+        public string[] OtherNames { get; set; }
+
+        public Dictionary<short, short> FundKeys { get; set; }
+
         public Address3 Address { get; set; }
     }
 
@@ -123,7 +131,9 @@ namespace MyMapper.UnitTests.Entities
         public Fund3 Fund { get; set; }
 
         //List
-        public List<BankingInfo3> BankingInformation { get; set; }        
+        public List<BankingInfo3> BankingInformation { get; set; }
+
+        public string Period { get; set; }
     }   
     #endregion
 }
