@@ -23,7 +23,7 @@ namespace MyMapper.Test.Mappers
         public Fund3 Map(Fund1 fund1)
         {
             //Both Classes (Fund1 & Fund3) have properties by the same name
-            return Mapper<Fund1, Fund3>.Exec<EntityConverter<Fund1, Fund3>>(fund1);
+            return Mapper<Fund1, Fund3>.Map(fund1).Exec();
         }
 
         public Details3 Map(Details1 details1)
@@ -47,6 +47,14 @@ namespace MyMapper.Test.Mappers
                                                     .With(r1 => r1.ConsumerID, (r3, consumerId) => r3.IDNumber = consumerId)
                                                     //Calculated field
                                                     .With(r1 => r1.AvgNoOfPurchasesPerMonth * r1.PeriodInMonths, (r3, total) => r3.TotalPurchases = total)
+                                                    //Using Switch
+                                                    .Switch(r1 => r1.PeriodInMonths)
+                                                        .Case(periodInMonths => periodInMonths > 0 && periodInMonths <= 3, (r3, periodInMonths) => r3.Period = "Quarter")
+                                                        .Case(periodInMonths => periodInMonths > 3 && periodInMonths <= 6, (r3, periodInMonths) => r3.Period = "Half")
+                                                        .Case(periodInMonths => periodInMonths > 6 && periodInMonths <= 9, (r3, periodInMonths) => r3.Period = "Three Quarter")
+                                                        .Case(periodInMonths => periodInMonths > 9 && periodInMonths <= 12, (r3, periodInMonths) => r3.Period = "Year")
+                                                        .Else((r3, periodInMonths) => r3.Period = "Unknown")
+                                                    .End()
                                                     //Mapping List
                                                     .With(r1 => r1.BankingInfos, (r3, bankingInfos) => r3.BankingInformation = bankingInfos, Map)
                                                     //Using another map - When Details1 is not null then map Details1 to Details3 using another map 
