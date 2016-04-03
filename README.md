@@ -13,5 +13,5 @@ Features:
 	and add maps only for properties with different names. Reflective auto mapping can be turned off too.
 4.	Ability to harness other maps. Other mappers can be chained as required.
 5.	Conditional, Switch mapping support.
-6.	Mappings happen on source instance.
+6.	Mappings happen dynamically on source instance.
 7.	Mappings can be debugged using Debugger.Break().
