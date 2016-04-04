@@ -105,6 +105,8 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then);
+
         IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then);        
     }
 
@@ -118,7 +120,11 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then);
+
         IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then);
+
+        IMyMapperSwitchEnd<TSource, TDestination> ElseMap(Action<IMyMapperRules<TSource, TDestination>> then);
 
         IMyMapperSwitchEnd<TSource, TDestination> Else(Action<TDestination, TSourceProperty> then);
 
@@ -137,6 +143,14 @@ namespace MyMapper
         IMyMapper<TSource, TDestination> End();
     }
 
+    class SwitchThen<TSource, TDestination, TSourceProperty>
+        where TSource : class
+        where TDestination : class, new()
+    {
+        public Action<TDestination, TSourceProperty> Case { get; set; }
+        public Action<IMyMapperRules<TSource, TDestination>> CaseMap { get; set; }
+    }
+
     /// <summary>
     /// MyMapperSwitch - Generic class
     /// </summary>
@@ -144,8 +158,8 @@ namespace MyMapper
     /// <typeparam name="TDestination">The destination</typeparam>
     /// <typeparam name="TSourceProperty">The property</typeparam>
     public class MyMapperSwitch<TSource, TDestination, TSourceProperty> : IMyMapperSwitch<TSource, TDestination, TSourceProperty>, 
-                                                                            IMyMapperSwitchElse<TSource, TDestination, TSourceProperty>, 
-                                                                            IMyMapperSwitchEnd<TSource, TDestination>
+                                                                          IMyMapperSwitchElse<TSource, TDestination, TSourceProperty>, 
+                                                                          IMyMapperSwitchEnd<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
     {
@@ -153,7 +167,8 @@ namespace MyMapper
         TSource Source { get; set; }
         IMyMapper<TSource, TDestination> Mapper { get; set; }
         Action<TDestination, TSourceProperty> ElseThen { get; set; }
-        Dictionary<Func<TSourceProperty, bool>, Action<TDestination, TSourceProperty>> cases = new Dictionary<Func<TSourceProperty, bool>, Action<TDestination, TSourceProperty>>();
+        Action<IMyMapperRules<TSource, TDestination>> ElseThenMap { get; set; }        
+        Dictionary<Func<TSourceProperty, bool>, SwitchThen<TSource, TDestination, TSourceProperty>> cases = new Dictionary<Func<TSourceProperty, bool>, SwitchThen<TSource, TDestination, TSourceProperty>>();
 
         public MyMapperSwitch(TSource source, TSourceProperty property, IMyMapper<TSource, TDestination> mapper)
         {
@@ -162,19 +177,39 @@ namespace MyMapper
             this.Mapper = mapper;
         }
 
-        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then)
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then)
         {
-            cases.Add(when, then);
+            SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
+            switchThen.CaseMap = then;
+
+            cases.Add(when, switchThen);
 
             return this;
-        }               
+        }
+
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then)
+        {
+            SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
+            switchThen.Case = then;
+
+            cases.Add(when, switchThen);
+
+            return this;
+        }
+
+        public IMyMapperSwitchEnd<TSource, TDestination> ElseMap(Action<IMyMapperRules<TSource, TDestination>> then)
+        {
+            ElseThenMap = then;
+
+            return this;
+        }
 
         public IMyMapperSwitchEnd<TSource, TDestination> Else(Action<TDestination, TSourceProperty> then)
         {
             ElseThen = then;
 
             return this;
-        }
+        }        
 
         public IMyMapper<TSource, TDestination> End()
         {
@@ -182,7 +217,16 @@ namespace MyMapper
             {
                 if (when != null && when(this.Property))
                 {
-                    cases[when](this.Mapper.Exec(), this.Property);
+                    var theCase = cases[when];
+
+                    if (theCase.Case != null)
+                    {
+                        theCase.Case(this.Mapper.Exec(), this.Property);
+                    }
+                    else if (theCase.CaseMap != null)
+                    {
+                        theCase.CaseMap(this.Mapper);
+                    }
 
                     return this.Mapper;
                 }                
@@ -191,6 +235,10 @@ namespace MyMapper
             if (ElseThen != null)
             {
                 ElseThen(this.Mapper.Exec(), this.Property);
+            }
+            else if (ElseThenMap != null)
+            {
+                ElseThenMap(this.Mapper);
             }
 
             return this.Mapper;
