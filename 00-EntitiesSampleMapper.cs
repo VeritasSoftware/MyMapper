@@ -50,6 +50,31 @@ namespace MyMapper.Test.Entities
         public string AccountNo { get; set; }
         //Automapped
         public string AccountName { get; set; }
+    }    
+
+    public class InsuranceMutualFund
+    {
+        public string MutualFundNumber { get; set; }
+        public string TaxNo { get; set; }
+    }
+
+    public class InsuranceSuperannuation
+    {
+        public string SuperannuationNumber { get; set; }
+        public string TaxFileNumber { get; set; }
+    }
+
+    public class InsuranceEmployment
+    {
+        public string EmploymentNumber { get; set; }
+        public string TaxNumber { get; set; }
+    }
+
+    public enum InsuranceType
+    {
+        MutualFund = 0,
+        Superannuation = 1,
+        Employment
     }
 
     public class Response1
@@ -62,10 +87,20 @@ namespace MyMapper.Test.Entities
 
         public Details1 Details { get; set; }
 
-        public Fund1 MutualFund { get; set; }
+        public Fund1 MutualFund { get; set; }         
 
         //List
-        public List<BankingInfo1> BankingInfos { get; set; }        
+        public List<BankingInfo1> BankingInfos { get; set; }
+
+        //bool HasInsuranceInfo { get; set; }
+
+        public InsuranceMutualFund InsuranceMutualFund { get; set; }
+
+        public InsuranceSuperannuation InsuranceSuperannuation { get; set; }
+
+        public InsuranceEmployment InsuranceEmployment { get; set; }
+
+        public InsuranceType InsuranceType { get; set; }
     }
     #endregion
 
@@ -115,6 +150,12 @@ namespace MyMapper.Test.Entities
         public string AccountNumber { get; set; }
         //Automapped
         public string AccountName { get; set; }
+    }    
+
+    public class InsuranceInfo
+    {
+        public string MembershipNo { get; set; }
+        public string TaxNumber { get; set; }
     }
 
     public class Response3
@@ -134,6 +175,8 @@ namespace MyMapper.Test.Entities
         public List<BankingInfo3> BankingInformation { get; set; }
 
         public string Period { get; set; }
+
+        public InsuranceInfo InsuranceInfo { get; set; }
     }   
     #endregion
 }
