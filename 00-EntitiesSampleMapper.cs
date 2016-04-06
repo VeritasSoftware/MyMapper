@@ -10,6 +10,13 @@ namespace MyMapper.Test.Entities
     {
         public DateTime DOB { get; set; }
         public bool IsDisabled { get; set; }
+        public Passport Passport { get; set; }
+    }
+
+    public class Passport
+    {
+        public string PassportNo { get; set; }
+        public DateTime DateOfIssue { get; set; }
     }
 
     public class Address1
@@ -105,11 +112,20 @@ namespace MyMapper.Test.Entities
     #endregion
 
     #region Response3
+    public class IDDocument
+    {
+        public string DocumentNumber { get; set; }
+
+        public DateTime IssueDate { get; set; }
+    }
+
     public class Details3
     {
         public DateTime DateOfBirth { get; set; }
 
         public bool IsHandicapped { get; set; }
+
+        public IDDocument ID { get; set; }
     }
 
     public class Address3
