@@ -27,11 +27,21 @@ namespace MyMapper.Test.Mappers
             return Mapper<Fund1, Fund3>.Map(fund1).Exec();
         }
 
+        public IDDocument Map(Passport passport)
+        {
+            return Mapper<Passport, IDDocument>.Map(passport, false) //Turn off auto mapping (reflective) with false. The properties with the same name will not be mapped then.
+                                               .With(d1 => d1.PassportNo, (d3, passportNo) => d3.DocumentNumber = passportNo)
+                                               .With(d1 => d1.DateOfIssue, (d3, dateOfIssue) => d3.IssueDate = dateOfIssue)
+                                             .Exec();
+        }
+
         public Details3 Map(Details1 details1)
         {
-            return Mapper<Details1, Details3>.Map(details1, false) //Turn off auto mapping (reflective) with false. The properties with the same name will not be mapped then.
+            return Mapper<Details1, Details3>.Map(details1, false)
                                                .With(d1 => d1.DOB, (d3, dob) => d3.DateOfBirth = dob)
                                                .With(d1 => d1.IsDisabled, (d3, disabled) => d3.IsHandicapped = disabled)
+                                               //Mapping with another map. Using the Passport to IDDocument map.
+                                               .With(d1 => d1.Passport, (d3, passport) => d3.ID = passport, Map)
                                              .Exec();
         }
 
