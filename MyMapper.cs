@@ -13,7 +13,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace MyMapper
 {
@@ -42,7 +41,7 @@ namespace MyMapper
         where TDestination : class, new()
     {
         IMyMapperRules<TSource, TDestination> With<TProperty>(
-                                                            Func<TSource, TProperty> source,
+                                                            Expression<Func<TSource, TProperty>> source,
                                                             Action<TDestination, TProperty> destination
                                                         );
 
@@ -78,13 +77,13 @@ namespace MyMapper
             where TDestinationResult : class, new();        
 
         IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
-                                                                Func<TSource, bool> when,
+                                                                Expression<Func<TSource, bool>> when,
                                                                 Func<TSource, TProperty> source,
                                                                 Action<TDestination, TProperty> destination
                                                             );
 
         IMyMapperRules<TSource, TDestination> When(
-                                                    Func<TSource, bool> when,
+                                                    Expression<Func<TSource, bool>> when,
                                                     Action<IMyMapperRules<TSource, TDestination>> then
                                              );
 
@@ -105,9 +104,9 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
-        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then);
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Expression<Func<TSourceProperty, bool>> when, Action<IMyMapperRules<TSource, TDestination>> then);
 
-        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then);        
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Expression<Func<TSourceProperty, bool>> when, Action<TDestination, TSourceProperty> then);        
     }
 
     /// <summary>
@@ -120,9 +119,9 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
-        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then);
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Expression<Func<TSourceProperty, bool>> when, Action<IMyMapperRules<TSource, TDestination>> then);
 
-        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then);
+        IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Expression<Func<TSourceProperty, bool>> when, Action<TDestination, TSourceProperty> then);
 
         IMyMapperSwitchEnd<TSource, TDestination> ElseMap(Action<IMyMapperRules<TSource, TDestination>> then);
 
@@ -143,7 +142,7 @@ namespace MyMapper
         IMyMapper<TSource, TDestination> End();
     }
 
-    class SwitchThen<TSource, TDestination, TSourceProperty>
+    internal class SwitchThen<TSource, TDestination, TSourceProperty>
         where TSource : class
         where TDestination : class, new()
     {
@@ -157,9 +156,9 @@ namespace MyMapper
     /// <typeparam name="TSource">The source</typeparam>
     /// <typeparam name="TDestination">The destination</typeparam>
     /// <typeparam name="TSourceProperty">The property</typeparam>
-    public class MyMapperSwitch<TSource, TDestination, TSourceProperty> : IMyMapperSwitch<TSource, TDestination, TSourceProperty>, 
-                                                                          IMyMapperSwitchElse<TSource, TDestination, TSourceProperty>, 
-                                                                          IMyMapperSwitchEnd<TSource, TDestination>
+    internal class MyMapperSwitch<TSource, TDestination, TSourceProperty> : IMyMapperSwitch<TSource, TDestination, TSourceProperty>, 
+                                                                            IMyMapperSwitchElse<TSource, TDestination, TSourceProperty>, 
+                                                                            IMyMapperSwitchEnd<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
     {
@@ -177,22 +176,22 @@ namespace MyMapper
             this.Mapper = mapper;
         }
 
-        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Func<TSourceProperty, bool> when, Action<IMyMapperRules<TSource, TDestination>> then)
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Expression<Func<TSourceProperty, bool>> when, Action<IMyMapperRules<TSource, TDestination>> then)
         {
             SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
             switchThen.CaseMap = then;
 
-            cases.Add(when, switchThen);
+            cases.Add(when.Compile(), switchThen);
 
             return this;
         }
 
-        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Func<TSourceProperty, bool> when, Action<TDestination, TSourceProperty> then)
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Expression<Func<TSourceProperty, bool>> when, Action<TDestination, TSourceProperty> then)
         {
             SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
             switchThen.Case = then;
 
-            cases.Add(when, switchThen);
+            cases.Add(when.Compile(), switchThen);
 
             return this;
         }
@@ -256,14 +255,14 @@ namespace MyMapper
         where TSource : class
         where TDestination : class, new()
     {
-        IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true);        
+        IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true);
 
+        [Obsolete("Exec is deprecated.", true)]
         TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map);
 
         TDestination Exec<TConverter>(TSource source)
             where TConverter : ITypeConverter<TSource, TDestination>, new();
-    }
-
+    }        
 
     /// <summary>
     /// MyMapper - Generic class
@@ -273,13 +272,13 @@ namespace MyMapper
     public class MyMapper<TSource, TDestination> : IMyMapper<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
-    {
+    {        
         TSource Source { get; set; }
-        TDestination Destination { get; set; }
+        TDestination Destination { get; set; }        
 
         public IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true)
-        {
-            this.Source = source;
+        {            
+            this.Source = source;                                   
 
             this.Destination = new TDestination();
 
@@ -287,14 +286,14 @@ namespace MyMapper
                 this.Destination = new EntityConverter<TSource, TDestination>().Convert(this.Source);
 
             return this;
-        }
+        }        
 
         public IMyMapperRules<TSource, TDestination> With<TProperty>(
-                                                                        Func<TSource, TProperty> source,
+                                                                        Expression<Func<TSource, TProperty>> source,
                                                                         Action<TDestination, TProperty> destination
                                                                 )
         {
-            var sourceProp = source(this.Source);
+            var sourceProp = source.Compile()(this.Source);
 
             destination(this.Destination, sourceProp);
 
@@ -365,12 +364,12 @@ namespace MyMapper
         }        
 
         public IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
-                                                                        Func<TSource, bool> when,
+                                                                        Expression<Func<TSource, bool>> when,
                                                                         Func<TSource, TProperty> source,
                                                                         Action<TDestination, TProperty> destination
                                                                     )
         {
-            if (!when(this.Source))
+            if (!when.Compile()(this.Source))
             {
                 return this;
             }
@@ -383,11 +382,11 @@ namespace MyMapper
         }
 
         public IMyMapperRules<TSource, TDestination> When(
-                                                        Func<TSource, bool> when,
+                                                        Expression<Func<TSource, bool>> when,
                                                         Action<IMyMapperRules<TSource, TDestination>> then
                                                     )
         {
-            if (when(this.Source))
+            if (when.Compile()(this.Source))
             {
                 then(this); 
             }
@@ -411,6 +410,7 @@ namespace MyMapper
             return this.Destination;
         }
 
+        [Obsolete("Exec is deprecated.", true)]
         public TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map)
         {
             return map(source, this);
