@@ -25,11 +25,12 @@ namespace MyMapper
         {
             IMyMapper<TSource, TDestination> mapper = new MyMapper<TSource, TDestination>();
 
-            mapper.Map(source, automap);
+            mapper.Map(source, automap);            
 
             return mapper as IMyMapperRules<TSource, TDestination>;
         }
 
+        [Obsolete("Exec is deprecated.", true)]
         public static TDestination Exec(TSource source, Func<TSource, IMyMapper<TSource, TDestination>, TDestination> map)
         {
             IMyMapper<TSource, TDestination> mapper = new MyMapper<TSource, TDestination>();
