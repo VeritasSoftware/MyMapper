@@ -14,4 +14,4 @@ Features:
 4.	Ability to harness other maps. Other mappers can be chained as required.
 5.	Conditional, Switch mapping support.
 6.	Mappings happen dynamically on source instance.
-7.	Mappings can be debugged using Debugger.Break().
+7.	Mappings can be debugged by either setting a breakpoint or using Debugger.Break().
