@@ -42,6 +42,8 @@ namespace MyMapper.Test.Entities
 
     public class Fund1
     {
+        public int? BankIdNo { get; set; }
+
         public string Name { get; set; }
         public int FundId { get; set; }
 
@@ -85,7 +87,7 @@ namespace MyMapper.Test.Entities
     }
 
     public class Response1
-    {
+    {        
         public int ConsumerID { get; set; }
         public string Name { get; set; }
 
@@ -99,15 +101,13 @@ namespace MyMapper.Test.Entities
         //List
         public List<BankingInfo1> BankingInfos { get; set; }
 
-        //bool HasInsuranceInfo { get; set; }
-
         public InsuranceMutualFund InsuranceMutualFund { get; set; }
 
         public InsuranceSuperannuation InsuranceSuperannuation { get; set; }
 
         public InsuranceEmployment InsuranceEmployment { get; set; }
 
-        public InsuranceType InsuranceType { get; set; }
+        public InsuranceType InsuranceType { get; set; }        
     }
     #endregion
 
@@ -151,6 +151,8 @@ namespace MyMapper.Test.Entities
 
     public class Fund3
     {
+        public int? BankIdNo { get; set; }
+
         public string Name { get; set; }
         public int FundId { get; set; }
 
