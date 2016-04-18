@@ -87,7 +87,7 @@ namespace MyMapper.Converters
         static Dictionary<Type, List<PropertyInfo>> dictionaryEntityPropertyInfos;
 
         protected object Convert(object source, Type destinationType)
-        {
+        {            
             List<PropertyInfo> sourcePropertyInfos;
             List<PropertyInfo> destinationPropertyInfos;
 
@@ -122,9 +122,11 @@ namespace MyMapper.Converters
             {
                 object sourceVal = null;
 
+                PropertyInfo sourcePropertyInfo = null;
+
                 try
-                {
-                    var sourcePropertyInfo = sourcePropertyInfos.Single(pi => pi.Name == destinationPropertyInfo.Name); //&& pi.PropertyType == destinationPropertyInfo.PropertyType);
+                {   
+                    sourcePropertyInfo = sourcePropertyInfos.Single(pi => pi.Name == destinationPropertyInfo.Name); //&& pi.PropertyType == destinationPropertyInfo.PropertyType);
 
                     sourceVal = sourcePropertyInfo.GetValue(source, BindingFlags.GetProperty, null, null, null);
                    
@@ -139,9 +141,9 @@ namespace MyMapper.Converters
                         CreateList(sList, dList, dList.GetType().GetGenericArguments()[0]);                        
 
                         sourceVal = dList;
-                    }
+                    }                    
                     else if (sourcePropertyInfo.PropertyType.IsArray)
-                    {                        
+                    {
                         var sList = sourceVal as IList;
                         var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType, sList.Count);
                         var dList = list as IList;
@@ -195,7 +197,7 @@ namespace MyMapper.Converters
                 {
                     try
                     {
-                        object value = sourceVal is IConvertible ?
+                        object value = (sourceVal is IConvertible) && Nullable.GetUnderlyingType(sourcePropertyInfo.PropertyType) == null ?
                                     System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType)
                                     : sourceVal;
 
