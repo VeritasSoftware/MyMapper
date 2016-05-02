@@ -14,10 +14,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using System.Data;
+
 namespace MyMapper
 {
     using MyMapper.Converters;
 
+    [Obsolete("Interface is deprecated.", true)]
     public interface IMap<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
@@ -74,7 +77,14 @@ namespace MyMapper
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TSourceResult : class
-            where TDestinationResult : class, new();        
+            where TDestinationResult : class, new();
+
+        IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
+                                                        Expression<Func<TSource, DataTable>> source,
+                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Func<DataRow, TDestinationResult> map
+                                                    )
+            where TDestinationResult : class, new();
 
         IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
                                                                 Expression<Func<TSource, bool>> when,
@@ -277,7 +287,10 @@ namespace MyMapper
         TDestination Destination { get; set; }        
 
         public IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true)
-        {            
+        {
+            if (source == null)
+                throw new ArgumentNullException();
+
             this.Source = source;                                   
 
             this.Destination = new TDestination();
@@ -361,7 +374,28 @@ namespace MyMapper
             destination(this.Destination, destinationList.ToList());
 
             return this;
-        }        
+        }
+
+        public IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
+                                                        Expression<Func<TSource, DataTable>> source,
+                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Func<DataRow, TDestinationResult> map
+                                                    )
+            where TDestinationResult : class, new()
+        {
+            DataTable sourceList = source.Compile()(this.Source);
+
+            var destinationList = new List<TDestinationResult>();
+
+            foreach (DataRow row in sourceList.Rows)
+            {
+                destinationList.Add(map(row));
+            }
+
+            destination(this.Destination, destinationList);
+
+            return this;
+        }   
 
         public IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
                                                                         Expression<Func<TSource, bool>> when,
