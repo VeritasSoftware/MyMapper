@@ -10,10 +10,14 @@ using System.Linq;
 using System.Text;
 
 using System.Data;
+using System.Data.SqlClient;
 using System.Reflection;
 
 using System.Collections;
 using System.Collections.Concurrent;
+
+using System.Linq.Expressions;
+using MyMapper;
 
 namespace MyMapper.Converters
 {
@@ -94,7 +98,8 @@ namespace MyMapper.Converters
                 List<PropertyInfo> sourcePropertyInfos;
                 List<PropertyInfo> destinationPropertyInfos;
 
-                object destinationObj = Activator.CreateInstance(destinationType);
+                //object destinationObj = Activator.CreateInstance(destinationType);
+                object destinationObj = destinationType.GetInstance();
 
                 if (dictionaryEntityPropertyInfos == null)
                     dictionaryEntityPropertyInfos = new ConcurrentDictionary<Type, List<PropertyInfo>>();
@@ -136,7 +141,8 @@ namespace MyMapper.Converters
                         if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
                         && sourcePropertyInfo.PropertyType.IsGenericType)
                         {
-                            var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+                            //var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+                            var list = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
 
                             var sList = sourceVal as IList;
                             var dList = list as IList;
@@ -158,7 +164,8 @@ namespace MyMapper.Converters
                         else if (sourcePropertyInfo.PropertyType.IsGenericType &&
                             sourceVal is IDictionary)
                         {
-                            var dictionary = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+                            //var dictionary = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
+                            var dictionary = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
 
                             var sDictionary = sourceVal as IDictionary;
                             var dDictionary = dictionary as IDictionary;
