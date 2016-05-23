@@ -184,7 +184,9 @@ namespace MyMapper.Converters
                             var listType = typeof(List<>);
                             var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
 
-                            var list = Activator.CreateInstance(constructedListType);
+                            //var list = Activator.CreateInstance(constructedListType);
+
+                            var list = TypeHelpers.GetInstanceFromType(constructedListType);
 
                             var sList = sourceVal as IList;
                             var dList = list as IList;
