@@ -186,7 +186,10 @@ namespace MyMapper
             this.Mapper = mapper;
         }
 
-        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(Expression<Func<TSourceProperty, bool>> when, Action<IMyMapperRules<TSource, TDestination>> then)
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> CaseMap(
+                                                                                        Expression<Func<TSourceProperty, bool>> when, 
+                                                                                        Action<IMyMapperRules<TSource, TDestination>> then
+                                                                                    )
         {
             SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
             switchThen.CaseMap = then;
@@ -196,7 +199,10 @@ namespace MyMapper
             return this;
         }
 
-        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(Expression<Func<TSourceProperty, bool>> when, Action<TDestination, TSourceProperty> then)
+        public IMyMapperSwitchElse<TSource, TDestination, TSourceProperty> Case(
+                                                                                    Expression<Func<TSourceProperty, bool>> when, 
+                                                                                    Action<TDestination, TSourceProperty> then
+                                                                                )
         {
             SwitchThen<TSource, TDestination, TSourceProperty> switchThen = new SwitchThen<TSource, TDestination, TSourceProperty>();
             switchThen.Case = then;
@@ -278,7 +284,7 @@ namespace MyMapper
     /// MyMapper - Generic class
     /// </summary>
     /// <typeparam name="TSource">The source</typeparam>
-    /// <typeparam name="TDestination">The destination</typeparam>
+    /// <typeparam name="TDestination">The destination</typeparam>    
     public class MyMapper<TSource, TDestination> : IMyMapper<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
@@ -286,6 +292,13 @@ namespace MyMapper
         TSource Source { get; set; }
         TDestination Destination { get; set; }        
 
+        /// <summary>
+        /// Map source to destination
+        /// </summary>
+        /// <param name="source">The source</param>
+        /// <param name="automap">Flag to use auto mapping (reflective)</param>
+        /// <returns cref="IMyMapperRules">The mapper rules</returns>
+        /// <exception cref="ArgumentNullException">Throws ArgumentNullException exception</exception>
         public IMyMapperRules<TSource, TDestination> Map(TSource source, bool automap = true)
         {
             if (source == null)
@@ -335,9 +348,9 @@ namespace MyMapper
         {
             var sourceList = source.Compile()(this.Source);
 
-            var destinationList = sourceList.Select(map);
+            var destinationList = sourceList.Select(map); 
 
-            destination(this.Destination, destinationList as ICollection<TDestinationResult>);
+            destination(this.Destination, destinationList.ToList());
 
             return this;
         }
