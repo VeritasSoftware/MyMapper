@@ -72,8 +72,8 @@ namespace MyMapper
             where TDestinationResult : class, new();
 
         IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
-                                                        Expression<Func<TSource, List<TSourceResult>>> source,
-                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Expression<Func<TSource, IList<TSourceResult>>> source,
+                                                        Action<TDestination, IList<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TSourceResult : class
@@ -81,7 +81,7 @@ namespace MyMapper
 
         IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
                                                         Expression<Func<TSource, DataTable>> source,
-                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Action<TDestination, IList<TDestinationResult>> destination,
                                                         Func<DataRow, TDestinationResult> map
                                                     )
             where TDestinationResult : class, new();
@@ -373,8 +373,8 @@ namespace MyMapper
         }
 
         public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
-                                                        Expression<Func<TSource, List<TSourceResult>>> source,
-                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Expression<Func<TSource, IList<TSourceResult>>> source,
+                                                        Action<TDestination, IList<TDestinationResult>> destination,
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TSourceResult : class
@@ -391,7 +391,7 @@ namespace MyMapper
 
         public IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
                                                         Expression<Func<TSource, DataTable>> source,
-                                                        Action<TDestination, List<TDestinationResult>> destination,
+                                                        Action<TDestination, IList<TDestinationResult>> destination,
                                                         Func<DataRow, TDestinationResult> map
                                                     )
             where TDestinationResult : class, new()
