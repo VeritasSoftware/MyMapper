@@ -7,9 +7,9 @@
 // Date                 Author      Reason                                                             //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 28-Mar-2016          Shantanu    Added Switch sub-system                                            //
+// 06-Feb-2017          Shantanu    Added parallel mapping support                                     //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -77,13 +77,37 @@ namespace MyMapper
                                                         Func<TSourceResult, TDestinationResult> map
                                                     )
             where TSourceResult : class
-            where TDestinationResult : class, new();
+            where TDestinationResult : class, new();        
 
         IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
                                                         Expression<Func<TSource, DataTable>> source,
                                                         Action<TDestination, IList<TDestinationResult>> destination,
                                                         Func<DataRow, TDestinationResult> map
                                                     )
+            where TDestinationResult : class, new();
+
+        IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                Expression<Func<TSource, ICollection<TSourceResult>>> source,
+                                                Action<TDestination, ICollection<TDestinationResult>> destination,
+                                                Func<TSourceResult, TDestinationResult> map
+                                            )
+            where TSourceResult : class
+            where TDestinationResult : class, new();
+
+        IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                        Expression<Func<TSource, IEnumerable<TSourceResult>>> source,
+                                                        Action<TDestination, IEnumerable<TDestinationResult>> destination,
+                                                        Func<TSourceResult, TDestinationResult> map
+                                                    )
+            where TSourceResult : class
+            where TDestinationResult : class, new();
+
+        IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                Expression<Func<TSource, IList<TSourceResult>>> source,
+                                                Action<TDestination, IList<TDestinationResult>> destination,
+                                                Func<TSourceResult, TDestinationResult> map
+                                            )
+            where TSourceResult : class
             where TDestinationResult : class, new();
 
         IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
@@ -312,8 +336,15 @@ namespace MyMapper
                 this.Destination = new EntityConverter<TSource, TDestination>().Convert(this.Source);
 
             return this;
-        }        
+        }
 
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TProperty">The proerty</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TProperty>(
                                                                         Expression<Func<TSource, TProperty>> source,
                                                                         Action<TDestination, TProperty> destination
@@ -326,6 +357,15 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, TSourceResult>> source,
                                                         Action<TDestination, TDestinationResult> destination,
@@ -338,6 +378,15 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, ICollection<TSourceResult>>> source,
                                                         Action<TDestination, ICollection<TDestinationResult>> destination,
@@ -348,13 +397,48 @@ namespace MyMapper
         {
             var sourceList = source.Compile()(this.Source);
 
-            var destinationList = sourceList.Select(map); 
+            var destinationList = sourceList.Select(map);
 
             destination(this.Destination, destinationList.ToList());
 
             return this;
         }
 
+        /// <summary>
+        /// Parallel With - Uses PLINQ
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
+        public IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                Expression<Func<TSource, ICollection<TSourceResult>>> source,
+                                                Action<TDestination, ICollection<TDestinationResult>> destination,
+                                                Func<TSourceResult, TDestinationResult> map
+                                            )
+        where TSourceResult : class
+        where TDestinationResult : class, new()
+        {
+            var sourceList = source.Compile()(this.Source);
+
+            var destinationList = sourceList.AsParallel().Select(map);
+
+            destination(this.Destination, destinationList.ToList());
+
+            return this;
+        }
+
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns>><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, IEnumerable<TSourceResult>>> source,
                                                         Action<TDestination, IEnumerable<TDestinationResult>> destination,
@@ -372,6 +456,41 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// Parallel With - Uses PLINQ
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns>><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
+        public IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                        Expression<Func<TSource, IEnumerable<TSourceResult>>> source,
+                                                        Action<TDestination, IEnumerable<TDestinationResult>> destination,
+                                                        Func<TSourceResult, TDestinationResult> map
+                                                    )
+            where TSourceResult : class
+            where TDestinationResult : class, new()
+        {
+            var sourceList = source.Compile()(this.Source);
+
+            var destinationList = sourceList.AsParallel().Select(map);
+
+            destination(this.Destination, destinationList.ToList());
+
+            return this;
+        }
+
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns>><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TSourceResult, TDestinationResult>(
                                                         Expression<Func<TSource, IList<TSourceResult>>> source,
                                                         Action<TDestination, IList<TDestinationResult>> destination,
@@ -389,6 +508,40 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// Parallel With - Uses PLINQ
+        /// </summary>
+        /// <typeparam name="TSourceResult">The source result type</typeparam>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns>><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
+        public IMyMapperRules<TSource, TDestination> ParallelWith<TSourceResult, TDestinationResult>(
+                                                Expression<Func<TSource, IList<TSourceResult>>> source,
+                                                Action<TDestination, IList<TDestinationResult>> destination,
+                                                Func<TSourceResult, TDestinationResult> map
+                                            )
+            where TSourceResult : class
+            where TDestinationResult : class, new()
+        {
+            var sourceList = source.Compile()(this.Source);
+
+            var destinationList = sourceList.AsParallel().Select(map);
+
+            destination(this.Destination, destinationList.ToList());
+
+            return this;
+        }
+
+        /// <summary>
+        /// With
+        /// </summary>
+        /// <typeparam name="TDestinationResult">The destination result type</typeparam>
+        /// <param name="source">The source datatable</param>
+        /// <param name="destination">The destination</param>
+        /// <param name="map">The source to destination map</param>
+        /// <returns>><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> With<TDestinationResult>(
                                                         Expression<Func<TSource, DataTable>> source,
                                                         Action<TDestination, IList<TDestinationResult>> destination,
@@ -408,8 +561,16 @@ namespace MyMapper
             destination(this.Destination, destinationList);
 
             return this;
-        }   
+        }
 
+        /// <summary>
+        /// With When
+        /// </summary>
+        /// <typeparam name="TProperty">The property type</typeparam>
+        /// <param name="when">The when condition</param>
+        /// <param name="source">The source</param>
+        /// <param name="destination">The destination</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> WithWhen<TProperty>(
                                                                         Expression<Func<TSource, bool>> when,
                                                                         Func<TSource, TProperty> source,
@@ -428,6 +589,12 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// When
+        /// </summary>
+        /// <param name="when">The when condition</param>
+        /// <param name="then">The then action</param>
+        /// <returns><see cref="IMyMapperRules<TSource, TDestination>"/></returns>
         public IMyMapperRules<TSource, TDestination> When(
                                                         Expression<Func<TSource, bool>> when,
                                                         Action<IMyMapperRules<TSource, TDestination>> then
@@ -441,6 +608,12 @@ namespace MyMapper
             return this;
         }
 
+        /// <summary>
+        /// Switch
+        /// </summary>
+        /// <typeparam name="TProperty">The property type</typeparam>
+        /// <param name="on">The property for the switch</param>
+        /// <returns><see cref="IMyMapperSwitch<TSource, TDestination, TProperty>"/></returns>
         public IMyMapperSwitch<TSource, TDestination, TProperty> Switch<TProperty>(Expression<Func<TSource, TProperty>> on)
         {
             IMyMapperSwitch<TSource, TDestination, TProperty> sw = new MyMapperSwitch<TSource, TDestination, TProperty>(
@@ -452,6 +625,10 @@ namespace MyMapper
             return sw;
         }
 
+        /// <summary>
+        /// Exec
+        /// </summary>
+        /// <returns>The destination <see cref="TDestination"/></returns>
         public TDestination Exec()
         {
             return this.Destination;
@@ -463,6 +640,12 @@ namespace MyMapper
             return map(source, this);
         }
 
+        /// <summary>
+        /// Exec
+        /// </summary>
+        /// <typeparam name="TConverter">The converter type</typeparam>
+        /// <param name="source">The source</param>
+        /// <returns>The destination <see cref="TDestination"/></returns>
         public TDestination Exec<TConverter>(TSource source)
             where TConverter : ITypeConverter<TSource, TDestination>, new()
         {
