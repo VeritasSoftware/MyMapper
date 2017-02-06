@@ -15,3 +15,4 @@ Features:
 5.	Conditional, Switch mapping support.
 6.	Mappings happen dynamically on source instance.
 7.	Mappings can be debugged by either setting a breakpoint or using Debugger.Break().
+8.	Parallel mapping support.
