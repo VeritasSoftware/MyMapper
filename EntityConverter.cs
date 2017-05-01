@@ -10,7 +10,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using System.Data;
 using System.Data.SqlClient;
@@ -18,9 +17,6 @@ using System.Reflection;
 
 using System.Collections;
 using System.Collections.Concurrent;
-
-using System.Linq.Expressions;
-using MyMapper;
 
 namespace MyMapper.Converters
 {
@@ -238,7 +234,9 @@ namespace MyMapper.Converters
                             sourceVal is IDictionary)
                         {
                             //var dictionary = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
-                            var dictionary = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
+                            //var dictionary = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
+                            var destType = sourceVal.GetType();
+                            var dictionary = TypeHelpers.GetInstanceFromType(destType);
 
                             var sDictionary = sourceVal as IDictionary;
                             var dDictionary = dictionary as IDictionary;
@@ -258,7 +256,6 @@ namespace MyMapper.Converters
                             var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
 
                             //var list = Activator.CreateInstance(constructedListType);
-
                             var list = TypeHelpers.GetInstanceFromType(constructedListType);
 
                             var sList = sourceVal as IList;
