@@ -14,9 +14,8 @@ using System.Linq;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
-
-using System.Collections;
 using System.Collections.Concurrent;
+using MyMapper.Extensions;
 
 namespace MyMapper.Converters
 {
@@ -154,197 +153,19 @@ namespace MyMapper.Converters
     /// </summary>
     /// <typeparam name="TSource">The source entity</typeparam>
     /// <typeparam name="TDestination">The destination entity</typeparam>
+    /// <exception cref="ArgumentNullException"></exception>
     public class EntityConverter<TSource, TDestination> : ITypeConverter<TSource, TDestination>
         where TSource : class
         where TDestination : class, new()
-    {
-        static ConcurrentDictionary<Type, List<PropertyInfo>> dictionaryEntityPropertyInfos;
-
-        protected object Convert(object source, Type destinationType)
-        {
-            try
-            {
-                List<PropertyInfo> sourcePropertyInfos;
-                List<PropertyInfo> destinationPropertyInfos;
-
-                //object destinationObj = Activator.CreateInstance(destinationType);
-                object destinationObj = destinationType.GetInstance();
-
-                if (dictionaryEntityPropertyInfos == null)
-                    dictionaryEntityPropertyInfos = new ConcurrentDictionary<Type, List<PropertyInfo>>();
-
-                if (!dictionaryEntityPropertyInfos.ContainsKey(source.GetType()))
-                {
-                    sourcePropertyInfos = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-
-                    dictionaryEntityPropertyInfos.GetOrAdd(source.GetType(), sourcePropertyInfos);
-                }
-                else
-                {
-                    dictionaryEntityPropertyInfos.TryGetValue(source.GetType(), out sourcePropertyInfos);
-                }
-
-                if (!dictionaryEntityPropertyInfos.ContainsKey(destinationObj.GetType()))
-                {
-                    destinationPropertyInfos = destinationObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-
-                    dictionaryEntityPropertyInfos.GetOrAdd(destinationObj.GetType(), destinationPropertyInfos);
-                }
-                else
-                {
-                    dictionaryEntityPropertyInfos.TryGetValue(destinationObj.GetType(), out destinationPropertyInfos);
-                }
-
-                foreach (PropertyInfo destinationPropertyInfo in destinationPropertyInfos)
-                {
-                    object sourceVal = null;
-
-                    PropertyInfo sourcePropertyInfo = null;
-
-                    try
-                    {
-                        sourcePropertyInfo = sourcePropertyInfos.Single(pi => pi.Name == destinationPropertyInfo.Name); //&& pi.PropertyType == destinationPropertyInfo.PropertyType);
-
-                        sourceVal = sourcePropertyInfo.GetValue(source, BindingFlags.GetProperty, null, null, null);
-
-                        if (typeof(IList).IsAssignableFrom(sourcePropertyInfo.PropertyType)
-                        && sourcePropertyInfo.PropertyType.IsGenericType)
-                        {
-                            //var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
-                            var list = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
-
-                            var sList = sourceVal as IList;
-                            var dList = list as IList;
-
-                            CreateList(sList, dList, dList.GetType().GetGenericArguments()[0]);
-
-                            sourceVal = dList;
-                        }
-                        else if (sourcePropertyInfo.PropertyType.IsArray)
-                        {
-                            var sList = sourceVal as IList;
-                            var list = Activator.CreateInstance(destinationPropertyInfo.PropertyType, sList.Count);
-                            var dList = list as IList;
-
-                            CreateArray(sList, dList, destinationPropertyInfo.PropertyType);
-
-                            sourceVal = dList;
-                        }
-                        else if (sourcePropertyInfo.PropertyType.IsGenericType &&
-                            sourceVal is IDictionary)
-                        {
-                            //var dictionary = Activator.CreateInstance(destinationPropertyInfo.PropertyType);
-                            //var dictionary = TypeHelpers.GetInstanceFromType(destinationPropertyInfo.PropertyType);
-                            var destType = sourceVal.GetType();
-                            var dictionary = TypeHelpers.GetInstanceFromType(destType);
-
-                            var sDictionary = sourceVal as IDictionary;
-                            var dDictionary = dictionary as IDictionary;
-
-
-                            var keyType = destinationPropertyInfo.PropertyType.GetGenericArguments()[0];
-                            var valueType = destinationPropertyInfo.PropertyType.GetGenericArguments()[1];
-
-                            CreateDictionary(sDictionary, dDictionary, keyType, valueType);
-
-                            sourceVal = dDictionary;
-                        }
-                        else if (typeof(IEnumerable).IsAssignableFrom(sourcePropertyInfo.PropertyType)
-                        && sourcePropertyInfo.PropertyType.IsGenericType)
-                        {
-                            var listType = typeof(List<>);
-                            var constructedListType = listType.MakeGenericType(destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
-
-                            //var list = Activator.CreateInstance(constructedListType);
-                            var list = TypeHelpers.GetInstanceFromType(constructedListType);
-
-                            var sList = sourceVal as IList;
-                            var dList = list as IList;
-
-                            CreateList(sList, dList, destinationPropertyInfo.PropertyType.GetGenericArguments()[0]);
-
-                            sourceVal = dList;
-                        }
-                        else if (sourcePropertyInfo.PropertyType.IsClass && !sourcePropertyInfo.PropertyType.FullName.StartsWith("System."))
-                        {
-                            sourceVal = this.Convert(sourceVal, destinationPropertyInfo.PropertyType);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
-
-                    if (destinationPropertyInfo != null && destinationPropertyInfo.CanWrite)
-                    {
-                        try
-                        {
-                            object value = (sourceVal is IConvertible) && Nullable.GetUnderlyingType(sourcePropertyInfo.PropertyType) == null ?
-                                        System.Convert.ChangeType(sourceVal, destinationPropertyInfo.PropertyType)
-                                        : sourceVal;
-
-                            destinationPropertyInfo.SetValue(destinationObj, value, null);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                }
-
-                return destinationObj;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }        
-
+    {        
         public TDestination Convert(TSource source)
         {
-            return this.Convert(source, typeof(TDestination)) as TDestination;            
-        }
-
-        private void CreateList(IList sList, IList dList, Type destinationType)
-        {
-            bool isClass = destinationType.IsClass && !destinationType.FullName.StartsWith("System.");            
-
-            foreach (var item in sList)
+            if (source == null)
             {
-                if (isClass)
-                    dList.Add(this.Convert(item, destinationType));
-                else
-                    dList.Add(item);                
+                throw new ArgumentNullException(nameof(source));
             }
-        }
 
-        private void CreateArray(IList sList, IList dList, Type destinationType)
-        {
-            bool isClass = destinationType.IsClass && !destinationType.FullName.StartsWith("System.");
-
-            int i = 0;
-            foreach (var item in sList)
-            {
-                if (isClass)
-                    dList[i] = this.Convert(item, destinationType);
-                else
-                    dList[i] = item;
-
-                i++;
-            }
-        }
-
-        private void CreateDictionary(IDictionary sList, IDictionary dList, Type destinationTypeKey, Type destinationTypeValue)
-        {            
-            foreach (var item in sList)
-            {
-                var entry = (DictionaryEntry)item;
-
-                var key = System.Convert.ChangeType(entry.Key, destinationTypeKey);
-                var value = System.Convert.ChangeType(entry.Value, destinationTypeValue);
-
-                dList.Add(key, value);
-            }
-        }
-
-    }
+            return source.AsDictionary(typeof(TSource)).ToObject<TDestination>();            
+        }        
+    }    
 }
