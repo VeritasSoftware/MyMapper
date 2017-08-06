@@ -19,4 +19,4 @@ Features:
 7.	Mappings happen dynamically on source instance.
 8.	Mappings can be debugged by either setting a breakpoint or using Debugger.Break().
 9.	Parallel mapping support.
-10.	.NET Object and IEnumerable<T> integration extensions. Async support.
+10.	.NET Object and IEnumerable`<T>` integration extensions. Async support.
