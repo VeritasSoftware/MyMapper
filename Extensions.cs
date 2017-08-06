@@ -30,7 +30,7 @@ namespace System
         }
 
         /// <summary>
-        /// MyMapper - Map extension method
+        /// MyMapper - MapAsync extension method
         /// </summary>
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDestination">The destination type</typeparam>
