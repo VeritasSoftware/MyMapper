@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyMapper.UnitTests
+namespace MyMapper.Test.Mappers
 {
     public interface IMapper
     {
